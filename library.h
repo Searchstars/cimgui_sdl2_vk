@@ -5,6 +5,10 @@
 #include "cimgui_sdl2.h"
 #include "cimgui_vk.h"
 
-void hello();
+extern "C" {
+
+    __declspec(dllexport) void hello();
+
+}
 
 #endif //CIMGUI_SDL2_VK_LIBRARY_H

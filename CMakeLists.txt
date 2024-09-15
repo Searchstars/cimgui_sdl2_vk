@@ -19,6 +19,8 @@ include_directories("${SDL_INCLUDE}")
 # 添加库文件搜索路径
 link_directories("${VULKAN_SDK}/Lib")
 
+add_definitions(-DCIMGUIDLL_EXPORTS)
+
 add_library(cimgui_sdl2_vk SHARED library.cpp cimgui.cpp cimgui_vk.cpp cimgui_sdl2.cpp imgui.cpp imgui_demo.cpp imgui_draw.cpp
         imgui_tables.cpp imgui_widgets.cpp imgui_impl_vulkan.cpp imgui_impl_sdl2.cpp)
 
