@@ -380,12 +380,9 @@ static uint32_t ImGui_ImplVulkan_MemoryType(VkMemoryPropertyFlags properties, ui
 
 static void check_vk_result(VkResult err)
 {
-    ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
-    if (!bd)
-        return;
-    ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
-    if (v->CheckVkResultFn)
-        v->CheckVkResultFn(err);
+    printf("[ImGui Native] Now in check_vk_result\n");
+    printf("[ImGui Native] VkResult=%d\n", err);
+    printf("[ImGui Native] Exiting function \"check_vk_result\"\n");
 }
 
 // Same as IM_MEMALIGN(). 'alignment' must be a power of two.
@@ -857,6 +854,8 @@ static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationC
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
     ImGui_ImplVulkan_CreateShaderModules(device, allocator);
 
+    printf("[ImGui Native] Now in ImGui_ImplVulkan_CreatePipeline\n");
+
     VkPipelineShaderStageCreateInfo stage[2] = {};
     stage[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stage[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -963,6 +962,8 @@ static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationC
     }
 #endif
 
+    printf("[ImGui Native] Ready to create pipeline\n");
+
     VkResult err = vkCreateGraphicsPipelines(device, pipelineCache, 1, &info, allocator, pipeline);
     check_vk_result(err);
 }
@@ -972,6 +973,8 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
     ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
     VkResult err;
+
+    printf("[ImGui Native] Now in ImGui_ImplVulkan_CreateDeviceObjects\n");
 
     if (!bd->FontSampler)
     {
@@ -987,9 +990,60 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
         info.minLod = -1000;
         info.maxLod = 1000;
         info.maxAnisotropy = 1.0f;
-        err = vkCreateSampler(v->Device, &info, v->Allocator, &bd->FontSampler);
+        printf("[ImGui Native] Ready to Create Sampler\n");
+
+        if (v->Device == VK_NULL_HANDLE)
+        {
+            printf("[ImGui Native] Error: Vulkan Device is invalid (VK_NULL_HANDLE)\n");
+        }
+        else
+        {
+            printf("[ImGui Native] Vulkan Device Handle: %p\n", (void*)v->Device);
+        }
+        printf("[ImGui Native] VkSamplerCreateInfo - sType: %d\n", info.sType);
+        printf("[ImGui Native] VkSamplerCreateInfo - magFilter: %d\n", info.magFilter);
+        printf("[ImGui Native] VkSamplerCreateInfo - minFilter: %d\n", info.minFilter);
+        printf("[ImGui Native] VkSamplerCreateInfo - mipmapMode: %d\n", info.mipmapMode);
+        printf("[ImGui Native] VkSamplerCreateInfo - addressModeU: %d\n", info.addressModeU);
+        printf("[ImGui Native] VkSamplerCreateInfo - addressModeV: %d\n", info.addressModeV);
+        printf("[ImGui Native] VkSamplerCreateInfo - addressModeW: %d\n", info.addressModeW);
+        printf("[ImGui Native] VkSamplerCreateInfo - minLod: %f\n", info.minLod);
+        printf("[ImGui Native] VkSamplerCreateInfo - maxLod: %f\n", info.maxLod);
+        printf("[ImGui Native] VkSamplerCreateInfo - maxAnisotropy: %f\n", info.maxAnisotropy);
+        if (bd->FontSampler != VK_NULL_HANDLE)
+        {
+            printf("[ImGui Native] Warning: FontSampler is already initialized\n");
+        }
+        else
+        {
+            printf("[ImGui Native] FontSampler is currently uninitialized\n");
+        }
+
+        err = vkCreateSampler(v->Device, &info, nullptr, &bd->FontSampler);
+
+        if (err == VK_SUCCESS)
+        {
+            if (bd->FontSampler != VK_NULL_HANDLE)
+            {
+                printf("[ImGui Native] FontSampler created successfully: %p\n", (void*)bd->FontSampler);
+            }
+            else
+            {
+                printf("[ImGui Native] Error: FontSampler creation failed, handle is still NULL\n");
+            }
+        }
+        else
+        {
+            printf("[ImGui Native] vkCreateSampler failed with error code: %d\n", err);
+        }
+
+
+        printf("[ImGui Native] Ready to check_vk_result\n");
         check_vk_result(err);
+        printf("[ImGui Native] Exit if branch (!bd->FontSampler)\n");
     }
+
+    printf("[ImGui Native] Created Sampler\n");
 
     if (!bd->DescriptorSetLayout)
     {
@@ -1001,9 +1055,12 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
         info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         info.bindingCount = 1;
         info.pBindings = binding;
+        printf("[ImGui Native] Ready to Create DescriptorSetLayout\n");
         err = vkCreateDescriptorSetLayout(v->Device, &info, v->Allocator, &bd->DescriptorSetLayout);
         check_vk_result(err);
     }
+
+    printf("[ImGui Native] Created DescriptorSetLayout\n");
 
     if (!bd->PipelineLayout)
     {
@@ -1019,11 +1076,16 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
         layout_info.pSetLayouts = set_layout;
         layout_info.pushConstantRangeCount = 1;
         layout_info.pPushConstantRanges = push_constants;
-        err = vkCreatePipelineLayout(v->Device, &layout_info, v->Allocator, &bd->PipelineLayout);
+        printf("[ImGui Native] Ready to Create PipelineLayout\n");
+        err = vkCreatePipelineLayout(v->Device, &layout_info, nullptr, &bd->PipelineLayout);
         check_vk_result(err);
     }
 
-    ImGui_ImplVulkan_CreatePipeline(v->Device, v->Allocator, v->PipelineCache, v->RenderPass, v->MSAASamples, &bd->Pipeline, v->Subpass);
+    printf("[ImGui Native] Created PipelineLayout\n");
+
+    ImGui_ImplVulkan_CreatePipeline(v->Device, nullptr, v->PipelineCache, v->RenderPass, v->MSAASamples, &bd->Pipeline, v->Subpass);
+
+    printf("[ImGui Native] Created Pipeline\n");
 
     return true;
 }
